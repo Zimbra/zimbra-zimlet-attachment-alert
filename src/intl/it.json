@@ -1,0 +1,8 @@
+{
+	"attachment-alert-zimlet": {
+		"title":"Attachment Alert",
+		"words":"attach|bijlage|adjunto|fichero adjunto|envío el fichero|allega",
+		"alert":"Nessun allegato trovato. Continuare?"
+	}
+}
+

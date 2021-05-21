@@ -1,0 +1,8 @@
+{
+	"attachment-alert-zimlet": {
+		"title":"Attachment Alert",
+		"words":"fichier joint|fichier attaché|attachement|pj|PJ",
+		"alert":" Pas de fichier joint trouvé. Continuer?"
+	}
+}
+

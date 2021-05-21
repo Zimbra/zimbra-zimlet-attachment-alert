@@ -1,0 +1,8 @@
+{
+	"attachment-alert-zimlet": {
+		"title":"Attachment Alert",
+		"words":"attach|bijlage|adjunt|fitxer adjunt|envio el fitxer|allegat",
+		"alert":"No s'han trobat adjunts. Continuar?"
+	}
+}
+

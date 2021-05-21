@@ -1,0 +1,8 @@
+{
+	"attachment-alert-zimlet": {
+		"title":"Attachment Alert",
+		"words":"attach|anhang|angehangen|angehängt|anhänge|adjunto|fichero adjunto|envío el fichero|allegat",
+		"alert":"Kein Anhang gefunden. Fortsetzen?"
+	}
+}
+

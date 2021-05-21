@@ -1,0 +1,8 @@
+{
+	"attachment-alert-zimlet": {
+		"title":"Attachment Alert",
+		"words":"attach|bijlage|adjunto|fichero adjunto|envío el fichero|allegat",
+		"alert":"Geen bijlage(n) gevonden. Verder gaan?"
+	}
+}
+

@@ -1,0 +1,8 @@
+{
+	"attachment-alert-zimlet": {
+		"title":"Attachment Alert",
+		"words":"anexo|anexado|anexada|anexados|anexadas|segue anexo|segue em anexo",
+		"alert":"Nenhum anexo presente. Continuar?"
+	}
+}
+
