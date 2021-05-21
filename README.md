@@ -204,3 +204,11 @@ Take a look at the `words` in the Dutch language file located at `src/intl/nl.js
 Here you can see the words used to indicate `attachment` in English, Dutch, Spanish and Italian. As these are commonly written languages in The Netherlands, these words will all work for the user that has Zimbra set to use Dutch UI language. The regular expression can never be 100% accurate so sometimes it will show a false reminder, or no reminder, but there is no easy fix for that.
 
 Also some languages like German are to similar to Dutch. Supporting German and Dutch at the same time will generate a lot of false reminders, so that won't work with this Zimlet.
+
+## References
+
+- https://github.com/Zimbra/zimlet-cli/wiki/Capture-Zimbra-events-inside-a-Zimlet
+
+The latest version of this guide can be found at:
+
+- https://github.com/Zimbra/zimlet-attachment-alert
