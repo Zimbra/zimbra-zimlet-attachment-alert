@@ -1,5 +1,10 @@
 # Listen for events using a Zimlet
 
+
+This readme is out of date at the moment....
+
+
+
 This article explains how to write a Zimlet that listens for an event using zimletEventEmitter. This way you can write for example an Attachment Alert Zimlet. The Attachment Alert Zimlet can register an event listener that is fired when the user clicks the Send button when writing an email. Then the Zimlet can look in the body of the email and look for words like `attached` and in case no attachment is uploaded it can show the user a reminder for uploading the attachment.
 
 ## Downloading and running the Attachment Alert Zimlet
