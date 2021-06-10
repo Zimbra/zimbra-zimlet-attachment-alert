@@ -5,11 +5,12 @@ import { Text } from 'preact-i18n';
 import style from './style';
 import { ModalDialog } from '@zimbra-client/components';
 
+//https://github.com/Zimbra/zimlet-cli/wiki/Capture-Zimbra-events-inside-a-Zimlet
 import { zimletEventEmitter } from '@zimbra-client/util';
 import { ZIMBRA_ZIMLET_EVENTS } from '@zimbra-client/constants';
 
-
 function createMore(props, context) {
+	//By importing withIntl the json translations from the intl folder are loaded into context, can we can access them directly, or use <Text...
 	const zimletStrings = context.intl.dictionary['attachment-alert-zimlet'];
 
 	const onSendHandler = () => new Promise((resolve, reject) => {
@@ -24,7 +25,7 @@ function createMore(props, context) {
 		}
 		else {
 			//If attachment words are found in the email text, ask the user a confirmation.
-			//this.props.words comes via the files in `intl` folder.
+			//zimletStrings.words are loaded JSON files found in `intl` folder, via withIntl
 			if (new RegExp(zimletStrings.words).test(message.text.toLowerCase())) {
 				showDialog(resolve, reject);
 			}
@@ -36,10 +37,11 @@ function createMore(props, context) {
 			}
 		}
 	});
+
+	//Register event handler
 	zimletEventEmitter.on(ZIMBRA_ZIMLET_EVENTS.ONSEND, onSendHandler, true);
 
 	//Dialog to ask user if attachment was forgotten to attach
-	//Inside model I cannot use <Text id="attachmentAlertZimlet.title"/>, why?
 	const showDialog = (resolve, reject) => {
 		let modal = (
 			<ModalDialog
@@ -78,12 +80,15 @@ function createMore(props, context) {
 		dispatch(context.zimletRedux.actions.zimlets.addModal({ id: 'addEventModal' }));
 	}
 
+	//This Zimlet does not render anything in the slot, so we return an empty string.
 	return (
 		""
 	);
 }
 
 
+//By using compose from recompose we can apply internationalization to our Zimlet
+//https://blog.logrocket.com/using-recompose-to-write-clean-higher-order-components-3019a6daf44c/
 export default compose(
 	withIntl()
 )

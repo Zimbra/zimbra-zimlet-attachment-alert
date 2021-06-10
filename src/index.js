@@ -12,6 +12,8 @@ export default function Zimlet(context) {
 
 	exports.init = function init() {
 		// The zimlet slots to load into, and what is being loaded into that slot
+		//Here we are using preact-context-provider to pass the Zimlet context to the createMore function which implements our Zimlet
+		//See: https://github.com/Zimbra/zimlet-cli/wiki/Zimlet-Context and https://github.com/synacor/preact-context-provider/
 		plugins.register('slot::mail-composer-toolbar-send', provide(context)(createMore));
 	};
 
