@@ -44,11 +44,14 @@ Write a new email and put something like `Please see attached document for more 
 
 Zimlets can register listeners that are provided via zimletEventEmitter. The following events are supported:
 
+- AFTERONSEND
 - LOGOUT
 - ONSEND
 - ONSENDINVITEREPLY
 
 _New events will be added to Zimbra soon, this guide will be updated when that happens._
+
+After the user clicks the send button and when all `ONSEND` event handlers have resolved, the `AFTERONSEND` event is fired. At this point the back-end will process the email for sending. This event can not abort the sending, so it should always resolve. This event can be used for compliance, custom logging or custom REST API calls.
 
 The `LOGOUT` event is fired when the user clicks the `Logout` menu item. It can be used to trigger a log-out in non Single Log Out aware 3rd party application.
 
