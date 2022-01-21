@@ -1,0 +1,7 @@
+{
+	"attachment-alert-zimlet": {
+		"title":"附件提醒",
+		"words":"附檔|附件|附圖|attach|bijlage|adjunto|fichero adjunto|envío el fichero|allegat|pfa",
+		"alert":"沒有找到附件，確定要繼續嗎？"
+	}
+}
