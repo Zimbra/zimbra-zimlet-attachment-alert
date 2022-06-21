@@ -48,6 +48,7 @@ Zimlets can register listeners that are provided via zimletEventEmitter. The fol
 - LOGOUT
 - ONSEND
 - ONSENDINVITEREPLY
+- ONBEFORESEND (props: message)
 
 _New events will be added to Zimbra soon, this guide will be updated when that happens._
 
@@ -55,7 +56,9 @@ After the user clicks the send button and when all `ONSEND` event handlers have 
 
 The `LOGOUT` event is fired when the user clicks the `Logout` menu item. It can be used to trigger a log-out in non Single Log Out aware 3rd party application.
 
-The `ONSEND` event is fired when the user clicks the `Send` button when sending an email. It can be used for email error checks, such as a forgotten attachment reminder, or do a check in a 3rd party application for compliance validation.
+The `ONBEFORESEND` event is fired when the user clicks the `Send` button when sending an email. It can be used for email error checks, such as a forgotten attachment reminder. The message to send is passed via the `message` prop. See https://github.com/Zimbra/zimbra-zimlet-attachment-alert for an example.
+
+The `ONSEND` event is fired when the user clicks the `Send` button when sending an email. It can be used for email error checks or do a check in a 3rd party application for compliance validation.
 
 The `ONSENDINVITEREPLY` is fired when a user RSVP's to a calendar invitation. The `verb` and `invitation` are passed to the event handler. You can use the `verb` to determine if the user accepted, declined, proposed a new time or tentatively accepted the invitation. Define your handler like: `onSendHandler = (args) => {console.log(args);}`.
 
@@ -87,7 +90,7 @@ zimletEventEmitter.on(ZIMBRA_ZIMLET_EVENTS.LOGOUT, onLogoutHandler, true);
 
 ## Visual Studio Code
 
-This guides includes a fully functional `Attachment Alert Zimlet`. It works by registering the `ONSEND` event. In the `onSendHandler` method the Zimlet checks if the email message has files attached and if words like _attachment, bijlage, fichier joint, fichier attaché, etc_ are found in the body of the email. In case there are no attachments uploaded, but _attachment_ words are in the body of the email, the Zimlet will show the user a reminder to upload the attachments.
+This guides includes a fully functional `Attachment Alert Zimlet`. It works by registering the `ONBEFORESEND` event. In the `onSendHandler` method the Zimlet checks if the email message has files attached and if words like _attachment, bijlage, fichier joint, fichier attaché, etc_ are found in the body of the email. In case there are no attachments uploaded, but _attachment_ words are in the body of the email, the Zimlet will show the user a reminder to upload the attachments.
 
 To learn from this Zimlet you should open it in Visual Studio Code and take a look at the implementation of the `Attachment Alert Zimlet`.
 
@@ -95,104 +98,137 @@ Open the folder `~/zimbra_course_pt16/zimbra-zimlet-attachment-alert` in Visual 
 
 ## Attachment Alert Zimlet
 
-The file src/components/more-menu/index.js implements the `Attachment Alert Zimlet` reminder dialog. The in-code comments explain how it works:
+The file src/index.js implements the basic Zimlet:
+```javascript
+import { createElement } from 'preact';
+
+import { InitializeEvents } from './components/initialize-events';
+
+export default function Zimlet(context) {
+	const { plugins } = context;
+	const exports = {};
+
+	exports.init = function init() {
+		plugins.register('slot::mail-composer-toolbar-send', () => (
+			<InitializeEvents context={context} />
+		));
+	};
+
+	return exports;
+}
+```
+
+The file /src/components/initialize-events.js implements the `Attachment Alert Zimlet` reminder dialog. The in-code comments explain how it works:
 
 ```javascript
-import { createElement, Component, render } from 'preact';
-import { withIntl } from '../../enhancers';
-import { withText, Text } from 'preact-i18n';
-import style from './style';
+import { createElement } from 'preact';
+import { useCallback, useEffect } from 'preact/hooks';
+
+import { zimletEventEmitter, callWith } from '@zimbra-client/util';
+import { ZIMBRA_ZIMLET_EVENTS } from '@zimbra-client/constants';
+import ConfirmModal from './confirm-modal';
+
+const MODAL_ID = 'zimbra-zimlet-attachment-alert';
+
+export const InitializeEvents = ({ context }) => {
+	const { dispatch } = context.store;
+	const { addModal } = context.zimletRedux.actions.zimlets;
+	const { removeModal } = context.zimletRedux.actions.zimlets;
+
+	const onDialogClose = useCallback(
+		reject => {
+			reject();
+			dispatch(removeModal({ id: MODAL_ID }));
+		},
+		[dispatch, removeModal]
+	);
+
+	const onDialogAction = useCallback(
+		resolve => {
+			resolve();
+			dispatch(removeModal({ id: MODAL_ID }));
+		},
+		[dispatch, removeModal]
+	);
+
+	const onSendHandler = useCallback(
+		({ message }) =>
+			new Promise((resolve, reject) => {
+
+				//Here we get the locale from the user settings
+				const locale = context.store.getState().locale;
+
+				//Read the i18n strings for this Zimlet
+				let zimletStrings = require(`../intl/${locale}.json`);
+				zimletStrings = zimletStrings['attachment-alert-zimlet'];
+				//zimletStrings.words now holds the Regex for finding attachment words in the email body
+
+				//This message has attachments, so no alert will be shown.
+				if (message.attachments.length > 0) {
+					//We have to return by calling resolve() to let the Zimlet framework know this Zimlet is done. 
+					//Then the sending of the email will continue after other error checks.
+					resolve();
+				}
+				else {
+					//If attachment words are found in the email text, ask the user a confirmation.
+					if (new RegExp(zimletStrings.words).test(message.text.toLowerCase())) {
+						const modal = (
+							<ConfirmModal
+								onClose={callWith(onDialogClose, reject)}
+								onAction={callWith(onDialogAction, resolve)}
+							/>
+						);
+						dispatch(addModal({ id: MODAL_ID, modal }));
+					}
+					else {
+						//If there are no attachment words, 
+						//We have to return by calling resolve() to let the Zimlet framework know this Zimlet is done. 
+						//Then the sending of the email will continue after other error checks.
+						resolve();
+					}
+				}
+			}),
+		[dispatch, addModal, onDialogAction, onDialogClose]
+	);
+
+	useEffect(() => {
+		zimletEventEmitter.on(ZIMBRA_ZIMLET_EVENTS.ONBEFORESEND, onSendHandler, true);
+
+		return () => {
+			zimletEventEmitter.off(ZIMBRA_ZIMLET_EVENTS.ONBEFORESEND, onSendHandler);
+		};
+	}, [onSendHandler]);
+
+	return null;
+};
+
+```
+
+The reminder dialog itself is implemented in src/components/confirm-modal.js and `withIntl()` implements the localization of the alert message for the user.
+
+```javascript
+import { createElement } from 'preact';
+import { Text } from 'preact-i18n';
+
+import { withIntl } from '../enhancers';
 import { ModalDialog } from '@zimbra-client/components';
 
-import { zimletEventEmitter } from '@zimbra-client/util';
-import { ZIMBRA_ZIMLET_EVENTS } from '@zimbra-client/constants';
+const ConfirmModal = ({ onClose, onAction }) => {
+	return (
+		<ModalDialog
+			title="attachment-alert-zimlet.title"
+			onAction={onAction}
+			onClose={onClose}
+		>
+			<p>
+				<Text id="attachment-alert-zimlet.alert" />
+			</p>
+		</ModalDialog>
+	);
+};
 
-@withIntl()
-@withText({
-    title: 'attachment-alert-zimlet.title',
-    words: 'attachment-alert-zimlet.words',
-    alert: 'attachment-alert-zimlet.alert'
-})
+export default withIntl()(ConfirmModal);
 
-export default class MoreMenu extends Component {
-    constructor(props) {
-        super(props);
-        this.zimletContext = props.children.context;
-        const { zimbraBatchClient } = this.zimletContext;
-        //Register this Zimlet onSendHandler handler to the ONSEND event
-        zimletEventEmitter.on(ZIMBRA_ZIMLET_EVENTS.ONSEND, this.onSendHandler, true);
-    }
-
-    //Will be called by the Zimlet framework in case the user hits Send button
-    onSendHandler = () => new Promise((resolve, reject) => {
-        //Get the message that is about to be send via the prop passed via the Zimlet slot
-        let message = this.props.getMessageToSend();
-
-        //This message has attachments, so no alert will be shown.
-        if (message.attachments.length > 0) {
-            //We have to return by calling resolve() to let the Zimlet framework know this Zimlet is done. 
-            //Then the sending of the email will continue after other error checks.
-            resolve();
-        }
-        else {
-            //If attachment words are found in the email text, ask the user a confirmation.
-            //this.props.words comes via the files in `intl` folder.
-            if (new RegExp(this.props.words).test(message.text.toLowerCase())) {
-                this.showDialog(resolve, reject);
-            }
-            else {
-                //If there are no attachment words, 
-                //We have to return by calling resolve() to let the Zimlet framework know this Zimlet is done. 
-                //Then the sending of the email will continue after other error checks.
-                resolve();
-            }
-        }
-    });
-
-    //Dialog to ask user if attachment was forgotten to attach
-    showDialog = (resolve, reject) => {
-        this.modal = (
-            <ModalDialog
-                class={style.modalDialog}
-                contentClass={style.modalContent}
-                innerClass={style.inner}
-                onClose={this.handleClose}
-                cancelButton={false}
-                header={false}
-                footer={false}
-            >
-                <header class="zimbra-client_modal-dialog_header"><h2>{this.props.title}</h2><button onClick={e => this.handleClose(e, reject)} aria-label="Close" class="zimbra-client_close-button_close zimbra-client_modal-dialog_actionButton"><span role="img" class="zimbra-icon zimbra-icon-close blocks_icon_md"></span></button></header>
-                <div class="zimbra-client_modal-dialog_content zimbra-client_language-modal_languageModalContent">{this.props.alert}</div>
-                <footer class="zimbra-client_modal-dialog_footer"><button type="button" class="blocks_button_button blocks_button_primary blocks_button_regular blocks_button_brand-primary" onClick={e => this.handleSendAnyway(e, resolve)}><Text id="buttons.send" /></button><button type="button" class="blocks_button_button blocks_button_regular" onClick={e => this.handleClose(e, reject)}><Text id="buttons.cancel" /></button></footer>
-
-            </ModalDialog>
-        );
-
-        const { dispatch } = this.zimletContext.store;
-        dispatch(this.zimletContext.zimletRedux.actions.zimlets.addModal({ id: 'addEventModal', modal: this.modal }));
-    }
-
-    //This is called when the user hits Send Anyway button.
-    handleSendAnyway = (e, resolve) => {
-        //Remove our event handler, so it will not trigger again.
-        zimletEventEmitter.off(ZIMBRA_ZIMLET_EVENTS.ONSEND, this.onLogoutHandler);
-        resolve();
-        const { dispatch } = this.zimletContext.store;
-        dispatch(this.zimletContext.zimletRedux.actions.zimlets.addModal({ id: 'addEventModal' }));
-    }
-
-    //This is called when the user hits Cancel button.
-    //handleClose only removes the dialog, but does not finish the Promise with resolve(), so the user can try again.
-    handleClose = (e, reject) => {
-        const { dispatch } = this.zimletContext.store;
-        dispatch(this.zimletContext.zimletRedux.actions.zimlets.addModal({ id: 'addEventModal' }));
-    }
-
-    //This Zimlet does not add UI elements, so it renders emptiness.
-    render() {
-        return ("");
-    }
-}
 ```
 
 ## Internationalization (i18n)
