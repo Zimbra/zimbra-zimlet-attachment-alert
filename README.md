@@ -46,9 +46,9 @@ Zimlets can register listeners that are provided via zimletEventEmitter. The fol
 
 - AFTERONSEND
 - LOGOUT
+- ONBEFORESEND (props: message)
 - ONSEND
 - ONSENDINVITEREPLY
-- ONBEFORESEND (props: message)
 
 _New events will be added to Zimbra soon, this guide will be updated when that happens._
 
@@ -233,7 +233,7 @@ export default withIntl()(ConfirmModal);
 
 ## Internationalization (i18n)
 
-This Zimlet uses a regular expression to find words like `attachment` in the body of the email. The regular expression used is defined in the `intl` folder of the Zimlet and `attachment` words are defined for a large number of languages.
+This Zimlet uses a regular expression to find words like `attachment` in the body of the email. The regular expression used is defined in the `intl` folder of the Zimlet and attachment `words` are defined for a large number of languages.
 
 Some linguistic research has been done to be able to show users the Attachment Reminder dialog in case they write an email in a language that is not the same as the UI language setting.
 
@@ -241,7 +241,7 @@ For example in The Netherlands it is common for users to write emails in English
 
 Take a look at the `words` in the Dutch language file located at `src/intl/nl.json`:
 ```
-		"words":"attach|bijlage|adjunto|fichero adjunto|envío el fichero|allegat",
+"words":"attach|bijlage|adjunto|fichero adjunto|envío el fichero|allegat",
 ```
 Here you can see the words used to indicate `attachment` in English, Dutch, Spanish and Italian. As these are commonly written languages in The Netherlands, these words will all work for the user that has Zimbra set to use Dutch UI language. The regular expression can never be 100% accurate so sometimes it will show a false reminder, or no reminder, but there is no easy fix for that.
 
