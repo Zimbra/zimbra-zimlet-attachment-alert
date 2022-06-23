@@ -32,12 +32,12 @@ Have you already used Zimlet Cli in the past? Make sure to update it using `sudo
 
 Log on to your Zimbra development server and make sure that you are seeing the modern UI. Then click the Jigsaw puzzle icon and Zimlets Sideloader. If you are not seeing the Zimlet Sideloader menu. You have to run `apt/yum install zimbra-zimlet-sideloader` on your Zimbra server and enable the Sideloader Zimlet in your Class of Service.
 
-> ![](screenshots/03-Sideload.png)
+![](screenshots/03-Sideload.png)
 *Sideload the Attachment Alert Zimlet by clicking Load Zimlet. The Zimlet is now added to the Zimbra UI in real-time. No reload is necessary.*
 
 Write a new email and put something like `Please see attached document for more information.` in the body of the email. Do not attach a file and click Send. You will then see the new Attachment Alert Zimlet in action.
 
-> ![](screenshots/04-attachment-alert.png)
+![](screenshots/04-attachment-alert.png)
 *The Attachment Alert*
 
 ## zimletEventEmitter events 
